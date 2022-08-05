@@ -6,8 +6,7 @@ from distutils.spawn import find_executable
 from time import sleep
 
 from mycroft_bus_client.message import Message
-from ovos_plugin_common_play.ocp.status import TrackState, MediaState, PlayerState
-from ovos_plugin_manager.templates.audio import AudioBackend
+from ovos_plugin_common_play.ocp.base import OCPAudioPlayerBackend
 from ovos_utils.log import LOG
 from requests import Session
 
@@ -53,7 +52,7 @@ SimpleAudioPluginConfig = {
 }
 
 
-class OVOSSimpleService(AudioBackend):
+class OVOSSimpleService(OCPAudioPlayerBackend):
     sox_play = find_executable("play")
     pulse_play = find_executable("paplay")
     alsa_play = find_executable("aplay")
@@ -61,11 +60,8 @@ class OVOSSimpleService(AudioBackend):
 
     def __init__(self, config, bus=None, name='ovos_simple'):
         super(OVOSSimpleService, self).__init__(config, bus)
-        self.config = config
-        self.bus = bus
         self.name = name
 
-        self._now_playing = None
         self.process = None
         self._stop_signal = False
         self._is_playing = False
@@ -76,53 +72,7 @@ class OVOSSimpleService(AudioBackend):
 
         self.bus.on('ovos.common_play.simple.play', self._play)
 
-    def track_start(self, data, other):
-        LOG.debug('Simple playback start')
-        if self._track_start_callback:
-            self._track_start_callback(self.track_info().get('name'))
-        self.bus.emit(Message("ovos.common_play.player.state",
-                              {"state": PlayerState.PLAYING}))
-        self.bus.emit(Message("ovos.common_play.media.state",
-                              {"state": MediaState.BUFFERING_MEDIA}))
-        self.bus.emit(Message("ovos.common_play.track.state",
-                              {"state": TrackState.PLAYING_AUDIOSERVICE}))
-
-    def queue_ended(self, data, other):
-        LOG.debug('Simple playback ended')
-        self._now_playing = None
-        if self._track_start_callback:
-            self._track_start_callback(None)
-
-        self.bus.emit(Message("ovos.common_play.player.state",
-                              {"state": PlayerState.STOPPED}))
-        self.bus.emit(Message("ovos.common_play.media.state",
-                              {"state": MediaState.END_OF_MEDIA}))
-
-    def supported_uris(self):
-        uris = ['file', 'http']
-        if self.sox_play:
-            uris.append("https")
-        return uris
-
-    def clear_list(self):
-        self.bus.emit(Message("ovos.common_play.playlist.clear"))
-
-    def add_list(self, tracks):
-        if len(tracks) >= 1:
-            t = tracks[0]
-            if isinstance(t, list):
-                t = t[0]
-            LOG.debug(f"queuing for playback: {t}")
-            self._now_playing = t
-            self.bus.emit(Message("ovos.common_play.track.state",
-                                  {"state": TrackState.QUEUED_AUDIOSERVICE}))
-            if len(tracks) > 1:
-                # should never happen, means something is bypassing ovos
-                # common play with bus messages
-                tracks = tracks[1:]
-                LOG.debug("discarded extra tracks, refused to handle "
-                          "playlists in audio service, use ovos common play instead!")
-
+    # simple player internals
     def _get_track(self, track_data):
         if isinstance(track_data, list):
             track = track_data[0]
@@ -182,6 +132,7 @@ class OVOSSimpleService(AudioBackend):
             LOG.debug(f'Mime info: {mime}')
 
             # wav file
+            player = None
             if 'wav' in mime[1]:
                 player = self.pulse_play
             # guess mp3
@@ -192,8 +143,7 @@ class OVOSSimpleService(AudioBackend):
             player = player or self.alsa_play
 
         # Indicate to audio service which track is being played
-        if self._track_start_callback:
-            self._track_start_callback(track)
+        self._track_start_callback(track)
 
         # Replace file:// uri's with normal paths
         uri = track.replace('file://', '')
@@ -222,22 +172,19 @@ class OVOSSimpleService(AudioBackend):
         self._track_start_callback(None)
         self._is_playing = False
         self._paused = False
-        self.bus.emit(Message("ovos.common_play.player.state",
-                              {"state": PlayerState.STOPPED}))
+        self.ocp_stop()
+
+    # audio service
+    def supported_uris(self):
+        uris = ['file', 'http']
+        if self.sox_play:
+            uris.append("https")
+        return uris
 
     def play(self, repeat=False):
         """ Play playlist using simple. """
-        LOG.debug('SimpleService Play')
-        # playlist is handled in ovos common play
-        # new event needed for repeat flag TODO
-        if repeat:  # remove log once listener is implemented in common play
-            LOG.debug("ignoring repeat flag, refused to handle "
-                      "playlists in audio service, use ovos common play instead!")
-
-        self.bus.emit(Message("ovos.common_play.media.state",
-                              {"state": MediaState.LOADED_MEDIA}))
-        # TODO playback
-        self.bus.emit(Message('ovos.common_play.simple.play', {'repeat': repeat}))
+        self.bus.emit(Message('ovos.common_play.simple.play',
+                              {'repeat': repeat}))
 
     def stop(self):
         """ Stop simple playback. """
@@ -247,11 +194,6 @@ class OVOSSimpleService(AudioBackend):
             while self._is_playing:
                 sleep(0.1)
             self._stop_signal = False
-            self.bus.emit(Message("ovos.common_play.player.state",
-                                  {"state": PlayerState.STOPPED}))
-            # Restore volume if lowered
-            self.restore_volume()
-            self.clear_list()
             return True
         return False
 
@@ -261,8 +203,6 @@ class OVOSSimpleService(AudioBackend):
             # Suspend the playback process
             self.process.send_signal(signal.SIGSTOP)
             self._paused = True
-            self.bus.emit(Message("ovos.common_play.player.state",
-                                  {"state": PlayerState.PAUSED}))
 
     def resume(self):
         """ Resume paused playback. """
@@ -270,30 +210,10 @@ class OVOSSimpleService(AudioBackend):
             # Resume the playback process
             self.process.send_signal(signal.SIGCONT)
             self._paused = False
-            self.bus.emit(Message("ovos.common_play.player.state",
-                                  {"state": PlayerState.PLAYING}))
-            self.bus.emit(Message("ovos.common_play.track.state",
-                                  {"state": TrackState.PLAYING_AUDIOSERVICE}))
 
-    def next(self):
-        """ Skip to next track in playlist. """
-        self._stop_running_process()
-        # playlist handling done by ovos common play
-        self.bus.emit(Message("ovos.common_play.next"))
-
-    def previous(self):
-        """ Skip to previous track in playlist. """
-        self._stop_running_process()
-        # playlist handling done by ovos common play
-        self.bus.emit(Message("ovos.common_play.previous"))
-
-    def lower_volume(self):
-        if self.config.get("duck", False):
-            self.bus.emit(Message("ovos.common_play.duck"))
-
-    def restore_volume(self):
-        if self.config.get("duck", False):
-            self.bus.emit(Message("ovos.common_play.unduck"))
+    def track_info(self):
+        """ Extract info of current track. """
+        return {"track": self._now_playing}
 
 
 def load_service(base_config, bus):
