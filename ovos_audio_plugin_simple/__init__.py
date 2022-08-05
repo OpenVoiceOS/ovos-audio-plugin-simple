@@ -183,6 +183,7 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
 
     def play(self, repeat=False):
         """ Play playlist using simple. """
+        self.ocp_start()
         self.bus.emit(Message('ovos.common_play.simple.play',
                               {'repeat': repeat}))
 
@@ -194,6 +195,7 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
             while self._is_playing:
                 sleep(0.1)
             self._stop_signal = False
+            self.ocp_stop()
             return True
         return False
 
@@ -203,6 +205,7 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
             # Suspend the playback process
             self.process.send_signal(signal.SIGSTOP)
             self._paused = True
+            self.ocp_pause()
 
     def resume(self):
         """ Resume paused playback. """
@@ -210,6 +213,7 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
             # Resume the playback process
             self.process.send_signal(signal.SIGCONT)
             self._paused = False
+            self.ocp_resume()
 
     def track_info(self):
         """ Extract info of current track. """
