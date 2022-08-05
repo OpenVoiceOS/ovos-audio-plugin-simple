@@ -45,6 +45,14 @@ def play_audio(uri, play_cmd="play"):
         return None
 
 
+SimpleAudioPluginConfig = {
+    "simple": {
+        "type": "ovos_simple",
+        "active": True
+    }
+}
+
+
 class OVOSSimpleService(AudioBackend):
     sox_play = find_executable("play")
     pulse_play = find_executable("paplay")

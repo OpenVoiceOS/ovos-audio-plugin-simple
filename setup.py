@@ -48,7 +48,10 @@ def required(requirements_file):
         return [pkg for pkg in requirements
                 if pkg.strip() and not pkg.startswith("#")]
 
+
 PLUGIN_ENTRY_POINT = 'ovos_audio_simple=ovos_audio_plugin_simple'
+PLUGIN_CONFIG_ENTRY_POINT = 'ovos_audio_simple.config=ovos_audio_plugin_simple:SimpleAudioPluginConfig'
+
 
 setup(
     name='ovos_audio_plugin_simple',
@@ -62,5 +65,6 @@ setup(
     package_data={'': package_files('ovos_audio_plugin_simple')},
     author_email='jarbasai@mailfence.com',
     keywords='ovos audio plugin',
-    entry_points={'mycroft.plugin.audioservice': PLUGIN_ENTRY_POINT}
+    entry_points={'mycroft.plugin.audioservice': PLUGIN_ENTRY_POINT,
+                  'mycroft.plugin.audioservice.config': PLUGIN_CONFIG_ENTRY_POINT}
 )
