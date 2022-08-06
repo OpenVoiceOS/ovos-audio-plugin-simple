@@ -153,9 +153,11 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
         except FileNotFoundError as e:
             LOG.error(f'Couldn\'t play audio, {e}')
             self.process = None
+            self.ocp_error()
         except Exception as e:
             LOG.exception(repr(e))
             self.process = None
+            self.ocp_error()
 
         # Wait for completion or stop request
         while (self._is_process_running() and not self._stop_signal):
