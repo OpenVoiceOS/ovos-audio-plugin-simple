@@ -5,7 +5,7 @@ import subprocess
 from distutils.spawn import find_executable
 from time import sleep
 
-from mycroft_bus_client.message import Message
+from ovos_bus_client import Message
 from ovos_plugin_common_play.ocp.status import TrackState, MediaState, PlayerState
 from ovos_plugin_manager.templates.audio import AudioBackend
 from ovos_utils.log import LOG
