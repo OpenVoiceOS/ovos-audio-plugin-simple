@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/V0.0.2a1...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/V0.0.2a2...HEAD)
+
+**Merged pull requests:**
+
+- Fix import [\#4](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/pull/4) ([goldyfruit](https://github.com/goldyfruit))
+
+## [V0.0.2a2](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/tree/V0.0.2a2) (2022-08-05)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/V0.0.2a1...V0.0.2a2)
 
 **Implemented enhancements:**
 
