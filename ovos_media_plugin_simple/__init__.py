@@ -2,14 +2,13 @@ import mimetypes
 import re
 import signal
 import subprocess
+import time
 from distutils.spawn import find_executable
 from time import sleep
 
-from ovos_bus_client import Message
-from requests import Session
-
 from ovos_plugin_manager.templates.media import AudioPlayerBackend
 from ovos_utils.log import LOG
+from requests import Session
 
 
 def find_mime(path):
@@ -30,7 +29,7 @@ def find_mime(path):
         return (None, None)
 
 
-def play_audio(uri, play_cmd="play"):
+def play_audio(uri, play_cmd):
     """ Play a audio file.
 
         Returns: subprocess.Popen object
@@ -45,7 +44,7 @@ def play_audio(uri, play_cmd="play"):
         return None
 
 
-class CLIOCPAudioService(AudioPlayerBackend):
+class SimpleAudioService(AudioPlayerBackend):
     sox_play = find_executable("play")
     pulse_play = find_executable("paplay")
     alsa_play = find_executable("aplay")
@@ -57,11 +56,31 @@ class CLIOCPAudioService(AudioPlayerBackend):
         self._stop_signal = False
         self._is_playing = False
         self._paused = False
+        self.ts = 0
 
         self.supports_mime_hints = True
         mimetypes.init()
 
-        self.bus.on('ovos.common_play.simple.play', self._play)
+    def on_track_start(self):
+        self.ts = time.time()
+        # Indicate to audio service which track is being played
+        if self._track_start_callback:
+            self._track_start_callback(self._now_playing)
+
+    def on_track_end(self):
+        self._is_playing = False
+        self._paused = False
+        self.process = None
+        self.ts = 0
+        if self._track_start_callback:
+            self._track_start_callback(None)
+
+    def on_track_error(self):
+        self._is_playing = False
+        self._paused = False
+        self.process = None
+        self.ts = 0
+        self.ocp_error()
 
     # simple player internals
     def _get_track(self, track_data):
@@ -94,21 +113,9 @@ class CLIOCPAudioService(AudioPlayerBackend):
                 self.process.kill()
         self.process = None
 
-    def _play(self, message):
-        """Implementation specific async method to handle playback.
-
-        This allows mpg123 service to use the next method as well
-        as basic play/stop.
-        """
-        LOG.info('SimpleAudioService._play')
-
-        # Stop any existing audio playback
-        self._stop_running_process()
-
-        repeat = message.data.get('repeat', False)
-        self._is_playing = True
-        self._paused = False
-
+    @property
+    def player_cmd(self):
+        """determine the best command to play a stream"""
         # sox should handle almost every format, but fails in some urls
         if self.sox_play:
             track = self._now_playing
@@ -132,40 +139,7 @@ class CLIOCPAudioService(AudioPlayerBackend):
 
             # fallback to alsa, only wav files will play correctly
             player = player or self.alsa_play
-
-        # Indicate to audio service which track is being played
-        self._track_start_callback(track)
-
-        # Replace file:// uri's with normal paths
-        uri = track.replace('file://', '')
-
-        try:
-            self.process = play_audio(uri, player)
-        except FileNotFoundError as e:
-            LOG.error(f'Couldn\'t play audio, {e}')
-            self.process = None
-            self.ocp_error()
-        except Exception as e:
-            LOG.exception(repr(e))
-            self.process = None
-            self.ocp_error()
-
-        # Wait for completion or stop request
-        while (self._is_process_running() and not self._stop_signal):
-            sleep(0.25)
-
-        if self._stop_signal:
-            self._stop_running_process()
-            self._is_playing = False
-            self._paused = False
-            return
-        else:
-            self.process = None
-
-        self._track_start_callback(None)
-        self._is_playing = False
-        self._paused = False
-        self.ocp_stop()
+        return player
 
     # audio service
     def supported_uris(self):
@@ -176,8 +150,35 @@ class CLIOCPAudioService(AudioPlayerBackend):
 
     def play(self, repeat=False):
         """ Play playlist using simple. """
-        self.bus.emit(Message('ovos.common_play.simple.play',
-                              {'repeat': repeat}))
+        # Stop any existing audio playback
+        self._stop_running_process()
+
+        self._is_playing = True
+        self._paused = False
+
+        # Replace file:// uri's with normal paths
+        uri = self._now_playing.replace('file://', '')
+
+        self.on_track_start()
+        try:
+            self.process = play_audio(uri, self.player_cmd)
+        except FileNotFoundError as e:
+            LOG.error(f'Couldn\'t play audio, {e}')
+            self.process = None
+            self.on_track_error()
+        except Exception as e:
+            LOG.exception(repr(e))
+            self.process = None
+            self.on_track_error()
+
+        # Wait for completion or stop request
+        while (self._is_process_running() and not self._stop_signal):
+            sleep(0.25)
+
+        if self._stop_signal:
+            self._stop_running_process()
+
+        self.on_track_end()
 
     def stop(self):
         """ Stop simple playback. """
@@ -204,6 +205,43 @@ class CLIOCPAudioService(AudioPlayerBackend):
             self.process.send_signal(signal.SIGCONT)
             self._paused = False
 
-    def track_info(self):
-        """ Extract info of current track. """
-        return {"track": self._now_playing}
+    def lower_volume(self):
+        """Lower volume.
+
+        This method is used to implement audio ducking. It will be called when
+        OpenVoiceOS is listening or speaking to make sure the media playing isn't
+        interfering.
+        """
+        # Not available in this plugin
+
+    def restore_volume(self):
+        """Restore normal volume.
+
+        Called when to restore the playback volume to previous level after
+        OpenVoiceOS has lowered it using lower_volume().
+        """
+        # Not available in this plugin
+
+    def get_track_length(self) -> int:
+        """
+        getting the duration of the audio in milliseconds
+        """
+        # we only can estimate how much we already played as a minimum value
+        return self.get_track_position()
+
+    def get_track_position(self) -> int:
+        """
+        get current position in milliseconds
+        """
+        # approximate given timestamp of playback start
+        if self.ts:
+            return int((time.time() - self.ts) * 1000)
+        return 0
+
+    def set_track_position(self, milliseconds):
+        """
+        go to position in milliseconds
+          Args:
+                milliseconds (int): number of milliseconds of final position
+        """
+        # Not available in this plugin
