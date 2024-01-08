@@ -49,32 +49,12 @@ def required(requirements_file):
                 if pkg.strip() and not pkg.startswith("#")]
 
 
-PLUGIN_ENTRY_POINT = 'ovos_audio_simple=ovos_audio_plugin_simple'
-PLUGIN_CONFIG_ENTRY_POINT = 'ovos_audio_simple.config=ovos_audio_plugin_simple:SimpleAudioPluginConfig'
-
-
-setup(
-    name='ovos_audio_plugin_simple',
-    version=get_version(),
-    description='simple audio plugin for ovos',
-    url='https://github.com/OpenVoiceOS/ovos-audio-plugin-simple',
-    packages=['ovos_audio_plugin_simple'],
-    license='Apache-2.0',
-    author='jarbasAi',
-    install_requires=required("requirements/requirements.txt"),
-    package_data={'': package_files('ovos_audio_plugin_simple')},
-    author_email='jarbasai@mailfence.com',
-    keywords='ovos audio plugin',
-    entry_points={'mycroft.plugin.audioservice': PLUGIN_ENTRY_POINT,
-                  'mycroft.plugin.audioservice.config': PLUGIN_CONFIG_ENTRY_POINT}
-)
-
 PLUGIN_ENTRY_POINT = 'ovos-media-audio-plugin-cli=ovos_audio_plugin_simple.CLIOCPAudioService'
 
 setup(
     name='ovos-media-plugin-cli',
     version=get_version(),
-    description='mplayer plugin for ovos',
+    description='simple OCP plugin for ovos',
     url='https://github.com/OpenVoiceOS/ovos-media-plugin-cli',
     author='JarbasAi',
     author_email='jarbasai@mailfence.com',
@@ -82,6 +62,6 @@ setup(
     packages=['ovos_audio_plugin_simple'],
     install_requires=required("requirements/requirements.txt"),
     package_data={'': package_files('ovos_audio_plugin_simple')},
-    keywords='ovos audio video OCP plugin',
+    keywords='ovos audio OCP plugin',
     entry_points={'opm.media.audio': PLUGIN_ENTRY_POINT}
 )
