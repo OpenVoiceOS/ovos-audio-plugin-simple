@@ -207,3 +207,40 @@ class CLIOCPAudioService(AudioPlayerBackend):
     def track_info(self):
         """ Extract info of current track. """
         return {"track": self._now_playing}
+
+    def lower_volume(self):
+        """Lower volume.
+
+        This method is used to implement audio ducking. It will be called when
+        OpenVoiceOS is listening or speaking to make sure the media playing isn't
+        interfering.
+        """
+        # Not available in this plugin
+
+    def restore_volume(self):
+        """Restore normal volume.
+
+        Called when to restore the playback volume to previous level after
+        OpenVoiceOS has lowered it using lower_volume().
+        """
+        # Not available in this plugin
+
+    def get_track_length(self) -> int:
+        """
+        getting the duration of the audio in milliseconds
+        """
+        # Not available in this plugin
+
+    def get_track_position(self) -> int:
+        """
+        get current position in milliseconds
+        """
+        # Not available in this plugin
+
+    def set_track_position(self, milliseconds):
+        """
+        go to position in milliseconds
+          Args:
+                milliseconds (int): number of milliseconds of final position
+        """
+        # Not available in this plugin
