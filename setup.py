@@ -68,3 +68,20 @@ setup(
     entry_points={'mycroft.plugin.audioservice': PLUGIN_ENTRY_POINT,
                   'mycroft.plugin.audioservice.config': PLUGIN_CONFIG_ENTRY_POINT}
 )
+
+PLUGIN_ENTRY_POINT = 'ovos-media-audio-plugin-cli=ovos_audio_plugin_simple.CLIOCPAudioService'
+
+setup(
+    name='ovos-media-plugin-cli',
+    version=get_version(),
+    description='mplayer plugin for ovos',
+    url='https://github.com/OpenVoiceOS/ovos-media-plugin-cli',
+    author='JarbasAi',
+    author_email='jarbasai@mailfence.com',
+    license='Apache-2.0',
+    packages=['ovos_audio_plugin_simple'],
+    install_requires=required("requirements/requirements.txt"),
+    package_data={'': package_files('ovos_audio_plugin_simple')},
+    keywords='ovos audio video OCP plugin',
+    entry_points={'opm.media.audio': PLUGIN_ENTRY_POINT}
+)
