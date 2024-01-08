@@ -5,12 +5,11 @@ import subprocess
 from distutils.spawn import find_executable
 from time import sleep
 
-from ovos_plugin_common_play.ocp.base import OCPAudioPlayerBackend
-from ovos_plugin_common_play.ocp.status import TrackState, MediaState, PlayerState
-from ovos_plugin_manager.templates.audio import AudioBackend
 from ovos_bus_client import Message
-from ovos_utils.log import LOG
 from requests import Session
+
+from ovos_plugin_manager.templates.media import AudioPlayerBackend
+from ovos_utils.log import LOG
 
 
 def find_mime(path):
@@ -46,24 +45,14 @@ def play_audio(uri, play_cmd="play"):
         return None
 
 
-SimpleAudioPluginConfig = {
-    "simple": {
-        "type": "ovos_simple",
-        "active": True
-    }
-}
-
-
-class OVOSSimpleService(OCPAudioPlayerBackend):
+class CLIOCPAudioService(AudioPlayerBackend):
     sox_play = find_executable("play")
     pulse_play = find_executable("paplay")
     alsa_play = find_executable("aplay")
     mpg123_play = find_executable("mpg123")
 
-    def __init__(self, config, bus=None, name='ovos_simple'):
-        super(OVOSSimpleService, self).__init__(config, bus)
-        self.name = name
-
+    def __init__(self, config, bus=None):
+        super().__init__(config, bus)
         self.process = None
         self._stop_signal = False
         self._is_playing = False
@@ -187,7 +176,6 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
 
     def play(self, repeat=False):
         """ Play playlist using simple. """
-        self.ocp_start()
         self.bus.emit(Message('ovos.common_play.simple.play',
                               {'repeat': repeat}))
 
@@ -199,7 +187,6 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
             while self._is_playing:
                 sleep(0.1)
             self._stop_signal = False
-            self.ocp_stop()
             return True
         return False
 
@@ -209,7 +196,6 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
             # Suspend the playback process
             self.process.send_signal(signal.SIGSTOP)
             self._paused = True
-            self.ocp_pause()
 
     def resume(self):
         """ Resume paused playback. """
@@ -217,25 +203,7 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
             # Resume the playback process
             self.process.send_signal(signal.SIGCONT)
             self._paused = False
-            self.ocp_resume()
 
     def track_info(self):
         """ Extract info of current track. """
         return {"track": self._now_playing}
-
-
-def load_service(base_config, bus):
-    backends = base_config.get('backends', [])
-    services = [(b, backends[b]) for b in backends
-                if backends[b]['type'] in ["simple", 'ovos_simple'] and
-                backends[b].get('active', False)]
-
-    if not any([OVOSSimpleService.sox_play,
-                OVOSSimpleService.pulse_play,
-                OVOSSimpleService.alsa_play,
-                OVOSSimpleService.mpg123_play]):
-        LOG.error("No basic playback functionality detected!!")
-        return []
-
-    instances = [OVOSSimpleService(s[1], bus, s[0]) for s in services]
-    return instances
