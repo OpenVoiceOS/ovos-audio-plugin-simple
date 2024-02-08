@@ -1,5 +1,9 @@
 # Changelog
 
+## [V0.1.0a4](https://github.com/NeonJarbas/ovos-audio-plugin-simple/tree/V0.1.0a4) (2024-01-08)
+
+[Full Changelog](https://github.com/NeonJarbas/ovos-audio-plugin-simple/compare/V0.1.0a3...V0.1.0a4)
+
 ## [V0.1.0a3](https://github.com/NeonJarbas/ovos-audio-plugin-simple/tree/V0.1.0a3) (2024-01-08)
 
 [Full Changelog](https://github.com/NeonJarbas/ovos-audio-plugin-simple/compare/V0.1.0a2...V0.1.0a3)
