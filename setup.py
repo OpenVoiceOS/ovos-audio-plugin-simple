@@ -8,7 +8,7 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 def get_version():
     """ Find the version of the package"""
     version = None
-    version_file = os.path.join(BASEDIR, 'ovos_audio_plugin_simple', 'version.py')
+    version_file = os.path.join(BASEDIR, 'ovos_media_plugin_simple', 'version.py')
     major, minor, build, alpha = (None, None, None, None)
     with open(version_file) as f:
         for line in f:
@@ -49,19 +49,19 @@ def required(requirements_file):
                 if pkg.strip() and not pkg.startswith("#")]
 
 
-PLUGIN_ENTRY_POINT = 'ovos-media-audio-plugin-cli=ovos_audio_plugin_simple:CLIOCPAudioService'
+PLUGIN_ENTRY_POINT = 'ovos-media-audio-plugin-simple=ovos_media_plugin_simple:SimpleAudioService'
 
 setup(
-    name='ovos-media-plugin-cli',
+    name='ovos-media-plugin-simple',
     version=get_version(),
     description='simple OCP plugin for ovos',
-    url='https://github.com/OpenVoiceOS/ovos-media-plugin-cli',
+    url='https://github.com/OpenVoiceOS/ovos-media-plugin-simple',
     author='JarbasAi',
     author_email='jarbasai@mailfence.com',
     license='Apache-2.0',
-    packages=['ovos_audio_plugin_simple'],
+    packages=['ovos_media_plugin_simple'],
     install_requires=required("requirements/requirements.txt"),
-    #package_data={'': package_files('ovos_audio_plugin_simple')},
+    package_data={'': package_files('ovos_media_plugin_simple')},
     keywords='ovos audio OCP plugin',
     entry_points={'opm.media.audio': PLUGIN_ENTRY_POINT}
 )
