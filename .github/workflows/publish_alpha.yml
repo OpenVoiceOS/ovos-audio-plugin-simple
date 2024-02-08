@@ -6,7 +6,7 @@ on:
     branches:
       - dev
     paths-ignore:
-      - 'ovos_audio_plugin_simple/version.py'
+      - 'ovos_media_plugin_simple/version.py'
       - 'test/**'
       - 'examples/**'
       - '.github/**'
@@ -14,7 +14,7 @@ on:
       - 'LICENSE'
       - 'CHANGELOG.md'
       - 'MANIFEST.in'
-      - 'readme.md'
+      - 'README.md'
       - 'scripts/**'
   workflow_dispatch:
 
