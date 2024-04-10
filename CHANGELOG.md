@@ -1,8 +1,12 @@
 # Changelog
 
-## [Unreleased](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/tree/HEAD)
+## [V0.0.2a5](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/tree/V0.0.2a5) (2024-02-08)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/V0.0.2a3...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/V0.0.2a4...V0.0.2a5)
+
+## [V0.0.2a4](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/tree/V0.0.2a4) (2023-09-06)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/V0.0.2a3...V0.0.2a4)
 
 **Implemented enhancements:**
 
