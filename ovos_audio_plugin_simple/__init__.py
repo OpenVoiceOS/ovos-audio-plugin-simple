@@ -2,13 +2,12 @@ import mimetypes
 import re
 import signal
 import subprocess
+import time
 from distutils.spawn import find_executable
 from time import sleep
 
-from ovos_plugin_common_play.ocp.base import OCPAudioPlayerBackend
-from ovos_plugin_common_play.ocp.status import TrackState, MediaState, PlayerState
-from ovos_plugin_manager.templates.audio import AudioBackend
 from ovos_bus_client import Message
+from ovos_plugin_manager.templates.audio import AudioBackend
 from ovos_utils.log import LOG
 from requests import Session
 
@@ -46,15 +45,7 @@ def play_audio(uri, play_cmd="play"):
         return None
 
 
-SimpleAudioPluginConfig = {
-    "simple": {
-        "type": "ovos_simple",
-        "active": True
-    }
-}
-
-
-class OVOSSimpleService(OCPAudioPlayerBackend):
+class OVOSSimpleService(AudioBackend):
     sox_play = find_executable("play")
     pulse_play = find_executable("paplay")
     alsa_play = find_executable("aplay")
@@ -67,6 +58,8 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
         self.process = None
         self._stop_signal = False
         self._is_playing = False
+        self._time_accumulator = 0
+        self._start = 0
         self._paused = False
 
         self.supports_mime_hints = True
@@ -74,6 +67,7 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
 
         self.bus.on('ovos.common_play.simple.play', self._play)
 
+    ###################
     # simple player internals
     def _get_track(self, track_data):
         if isinstance(track_data, list):
@@ -178,7 +172,14 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
         self._paused = False
         self.ocp_stop()
 
-    # audio service
+    ############
+    # mandatory abstract methods
+
+    @property
+    def playback_time(self):
+        """ in milliseconds """
+        return max(self._start - time.time(), 0) + self._time_accumulator
+
     def supported_uris(self):
         uris = ['file', 'http']
         if self.sox_play:
@@ -188,12 +189,15 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
     def play(self, repeat=False):
         """ Play playlist using simple. """
         self.ocp_start()
+        self._start = time.time()
+        self._time_accumulator = 0
         self.bus.emit(Message('ovos.common_play.simple.play',
                               {'repeat': repeat}))
 
     def stop(self):
         """ Stop simple playback. """
         LOG.info('SimpleService Stop')
+        self._start = self._time_accumulator = 0
         if self._is_playing:
             self._stop_signal = True
             while self._is_playing:
@@ -206,6 +210,9 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
     def pause(self):
         """ Pause simple playback. """
         if self.process and not self._paused:
+            if self._start:
+                self._time_accumulator += time.time() - self._start
+                self._start = 0
             # Suspend the playback process
             self.process.send_signal(signal.SIGSTOP)
             self._paused = True
@@ -214,14 +221,59 @@ class OVOSSimpleService(OCPAudioPlayerBackend):
     def resume(self):
         """ Resume paused playback. """
         if self.process and self._paused:
+            self._start = time.time()
             # Resume the playback process
             self.process.send_signal(signal.SIGCONT)
             self._paused = False
             self.ocp_resume()
 
-    def track_info(self):
-        """ Extract info of current track. """
-        return {"track": self._now_playing}
+    def get_track_position(self):
+        """
+        get current position in milliseconds
+        """
+        return self.playback_time
+
+    ################
+    # missing features in simple audio plugin
+    def lower_volume(self):
+        LOG.error("simple audio player does not support lower_volume")
+
+    def restore_volume(self):
+        LOG.error("simple audio player does not support restore_volume")
+
+    def get_track_length(self):
+        """
+        getting the duration of the audio in milliseconds
+        """
+        LOG.error("simple audio player does not support get_track_length")
+        return self.playback_time
+
+    def set_track_position(self, milliseconds):
+        """
+        go to position in milliseconds
+
+          Args:
+                milliseconds (int): number of milliseconds of final position
+        """
+        LOG.error("simple audio player does not support set_track_position")
+
+    def seek_forward(self, seconds=1):
+        """
+        skip X seconds
+
+          Args:
+                seconds (int): number of seconds to seek, if negative rewind
+        """
+        LOG.error("simple audio player does not support seek_forward")
+
+    def seek_backward(self, seconds=1):
+        """
+        rewind X seconds
+
+          Args:
+                seconds (int): number of seconds to seek, if negative rewind
+        """
+        LOG.error("simple audio player does not support seek_backward")
 
 
 def load_service(base_config, bus):
@@ -239,3 +291,11 @@ def load_service(base_config, bus):
 
     instances = [OVOSSimpleService(s[1], bus, s[0]) for s in services]
     return instances
+
+
+SimpleAudioPluginConfig = {
+    "simple": {
+        "type": "ovos_simple",
+        "active": True
+    }
+}
