@@ -149,28 +149,28 @@ class OVOSSimpleService(AudioBackend):
         except FileNotFoundError as e:
             LOG.error(f'Couldn\'t play audio, {e}')
             self.process = None
-            self.ocp_error()
         except Exception as e:
             LOG.exception(repr(e))
             self.process = None
-            self.ocp_error()
 
-        # Wait for completion or stop request
-        while (self._is_process_running() and not self._stop_signal):
-            sleep(0.25)
+        if self.process:
+            # Wait for completion or stop request
+            while (self._is_process_running() and not self._stop_signal):
+                sleep(0.25)
 
-        if self._stop_signal:
-            self._stop_running_process()
-            self._is_playing = False
-            self._paused = False
-            return
+            if self._stop_signal:
+                self._stop_running_process()
+                self._is_playing = False
+                self._paused = False
+                return
+            else:
+                self.process = None
         else:
-            self.process = None
+            self.ocp_error()
 
         self._track_start_callback(None)
         self._is_playing = False
         self._paused = False
-        self.ocp_stop()
 
     ############
     # mandatory abstract methods
@@ -188,7 +188,6 @@ class OVOSSimpleService(AudioBackend):
 
     def play(self, repeat=False):
         """ Play playlist using simple. """
-        self.ocp_start()
         self._start = time.time()
         self._time_accumulator = 0
         self.bus.emit(Message('ovos.common_play.simple.play',
@@ -203,7 +202,6 @@ class OVOSSimpleService(AudioBackend):
             while self._is_playing:
                 sleep(0.1)
             self._stop_signal = False
-            self.ocp_stop()
             return True
         return False
 
@@ -216,7 +214,6 @@ class OVOSSimpleService(AudioBackend):
             # Suspend the playback process
             self.process.send_signal(signal.SIGSTOP)
             self._paused = True
-            self.ocp_pause()
 
     def resume(self):
         """ Resume paused playback. """
@@ -225,7 +222,6 @@ class OVOSSimpleService(AudioBackend):
             # Resume the playback process
             self.process.send_signal(signal.SIGCONT)
             self._paused = False
-            self.ocp_resume()
 
     def get_track_position(self):
         """
