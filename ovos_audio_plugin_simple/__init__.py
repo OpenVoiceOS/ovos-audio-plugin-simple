@@ -311,7 +311,9 @@ class OVOSSimpleService(AudioBackend):
 def load_service(base_config, bus):
     backends = base_config.get('backends', [])
     services = [(b, backends[b]) for b in backends
-                if backends[b]['type'] in ["simple", 'ovos_simple'] and
+                if backends[b]['type'] in ["simple",
+                                           'ovos_simple',
+                                           'ovos_audio_simple'] and
                 backends[b].get('active', False)]
 
     if not any([OVOSSimpleService.sox_play,
