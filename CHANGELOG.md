@@ -1,12 +1,60 @@
 # Changelog
 
-## [V0.0.1](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/tree/V0.0.1) (2022-02-25)
+## [0.0.2a8](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/tree/0.0.2a8) (2024-09-11)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/1f7679bd47baa16dcb94674eede87462354a4177...V0.0.1)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/V0.0.2a7...0.0.2a8)
 
 **Merged pull requests:**
 
-- feat/workflows [\#1](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/pull/1) ([JarbasAl](https://github.com/JarbasAl))
+- feat:semver [\#12](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/pull/12) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.2a7](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/tree/V0.0.2a7) (2024-05-11)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/V0.0.2a6...V0.0.2a7)
+
+**Fixed bugs:**
+
+- hotfix/backend\_type [\#11](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/pull/11) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.2a6](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/tree/V0.0.2a6) (2024-05-11)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/V0.0.2a5...V0.0.2a6)
+
+**Merged pull requests:**
+
+- refactor/legacy\_audio [\#10](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/pull/10) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.2a5](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/tree/V0.0.2a5) (2024-02-08)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/V0.0.2a4...V0.0.2a5)
+
+## [V0.0.2a4](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/tree/V0.0.2a4) (2023-09-06)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/V0.0.2a3...V0.0.2a4)
+
+**Implemented enhancements:**
+
+- feat/native\_ocp [\#3](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/pull/3) ([NeonJarbas](https://github.com/NeonJarbas))
+
+## [V0.0.2a3](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/tree/V0.0.2a3) (2023-04-23)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/V0.0.2a2...V0.0.2a3)
+
+**Merged pull requests:**
+
+- Fix import [\#4](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/pull/4) ([goldyfruit](https://github.com/goldyfruit))
+
+## [V0.0.2a2](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/tree/V0.0.2a2) (2022-08-05)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/V0.0.2a1...V0.0.2a2)
+
+**Implemented enhancements:**
+
+- feat/plugin configs [\#2](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/pull/2) ([NeonJarbas](https://github.com/NeonJarbas))
+
+## [V0.0.2a1](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/tree/V0.0.2a1) (2022-06-09)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-audio-plugin-simple/compare/V0.0.1...V0.0.2a1)
 
 
 
